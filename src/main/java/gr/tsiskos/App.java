@@ -10,10 +10,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.nio.file.Files;
 
-/**
- * Hello world!
- *
- */
 public class App 
 {
     public static void main( String[] args ) throws IOException {
@@ -41,7 +37,7 @@ public class App
                .map( file -> {
                    try {
 
-                       byte[] bytes = Files.readAllBytes(file.getPath()); //.toByteArray(file.getPath().toFile());
+                       byte[] bytes = Files.readAllBytes(file.getPath());
                        String hashValue = Hashing.sha256().hashBytes(bytes).toString();
                        if(uniqueFiles.containsKey(hashValue)){
                            System.out.println("Duplicate file found: "+file.toString()+". Same with: "+ uniqueFiles.get(hashValue).toString());
@@ -54,7 +50,5 @@ public class App
                    return file;
                })
                .collect(Collectors.toList());
-
-
     }
 }
