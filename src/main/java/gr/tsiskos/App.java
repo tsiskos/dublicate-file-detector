@@ -1,10 +1,17 @@
 package gr.tsiskos;
 
 import com.google.common.hash.Hashing;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.FlowableOnSubscribe;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,43 +19,28 @@ import java.nio.file.Files;
 
 public class App 
 {
-    public static void main( String[] args ) throws IOException {
 
-        ArrayList<String> sourcePaths;
-        sourcePaths = new ArrayList<>();
-        sourcePaths.add("D:\\Photos");
-        sourcePaths.add("E:\\DATA\\Photos");
+    public static void main( String[] args ) {
+        ArrayList<String> paths = new ArrayList<>();
+        paths.add("C:\\Users\\tsiskos\\Pictures\\Phone 23_7_2017");
+        paths.add("C:\\Users\\tsiskos\\Pictures\\Phone 23_7_2017 - Copy");
+        Flowable<Path> source = DublicateFileDetector.detectDublicates(paths);
 
-        Hashtable<String, HashedFile>  uniqueFiles = new Hashtable<>();
-
-        List<HashedFile> hashValues = sourcePaths.stream().flatMap(path -> {
+        source.subscribe(e-> {
+            System.out.println("Deleting "+e.toString());
             try {
-                return Files.walk(Paths.get(path));
-            } catch (IOException e) {
-                e.printStackTrace();
+                File dublicateFound = e.toFile();
+
+                if (!dublicateFound.delete()) {
+                    System.out.println("Failed to delete.");
+                }
+            }catch(Exception ex){
+                ex.printStackTrace();
             }
-            return null;
-        }).filter(p -> p.toFile().isFile())
-                .filter(p->!p.toString().endsWith(".rar"))
-                .filter(p->!p.toString().endsWith(".war"))
-                .filter(p->!p.toString().endsWith(".zip"))
-               .map(file->  new HashedFile(file))
+        });
 
-               .map( file -> {
-                   try {
+        System.out.println("Done!");
 
-                       byte[] bytes = Files.readAllBytes(file.getPath());
-                       String hashValue = Hashing.sha256().hashBytes(bytes).toString();
-                       if(uniqueFiles.containsKey(hashValue)){
-                           System.out.println("Duplicate file found: "+file.toString()+". Same with: "+ uniqueFiles.get(hashValue).toString());
-                       }else{
-                           uniqueFiles.put(hashValue,file);
-                       }
-                   } catch (IOException e) {
-                       e.printStackTrace();
-                   }
-                   return file;
-               })
-               .collect(Collectors.toList());
+
     }
 }
